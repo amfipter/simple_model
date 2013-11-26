@@ -6,6 +6,8 @@ require './feed.rb'
 require './log.rb'
 require './util.rb'
 
+#s
+
 def comm_test()
   $Comm.send(0, 'left', 'test from 0')
   $Comm.send(0, 'right', 'test from 0')
