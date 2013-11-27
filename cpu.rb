@@ -16,6 +16,7 @@ class Cpu
     tr = Thread.new do
       while(@work) do
         feed if @id == 0
+        #puts "driver: #{@id}: #{@buffer.size}"
         if(@buffer.size > 10)
           if(@free_r)
             @free_r = false
@@ -32,25 +33,29 @@ class Cpu
         sleep 1/1000
       end
     end
+    tr.run
+    #tr.join
   end
   
   def executor
     tr = Thread.new do
       while(@work) do
-        log('=====> ' + @id.to_s + ' ' + @buffer.size.to_s)
+        puts '=====> ' + @id.to_s + ' ' + @buffer.size.to_s
         if(@buffer.empty?)
-          sleep 1/300
+          sleep 1/500
         else
           task = @buffer.pop
-          tast.start
+          task.start
           log("load (executor): #{@buffer.size}")
         end
       end
     end
+    tr.run
+    #tr.join
   end
   
   def communicator
-    Thread.new do
+    tr = Thread.new do
       while(@work) do
         ask_free("right") unless @free_r
         ask_free("left") unless @free_l
@@ -58,12 +63,18 @@ class Cpu
         sleep 1/1000
       end
     end
+    tr.run
+    #tr.join
+  end
+
+  def buff_size
+    @buffer.size
   end
   
   def feed
     if(@buffer.size < 15)
       a = $Feed.get_ready_task
-      #puts a.class unless a.nil?
+      #puts a.class
       @buffer.push a unless a.nil?
       #puts @buffer.size unless @buffer.size == 10
       log("load (feed): #{@buffer.size}")
@@ -96,28 +107,28 @@ class Cpu
       end
       return nil
     end
-    if(msg.eql? $MSG[3])
-      if(from.eql? "right")
-        $Comm.send(@id, "left", $MSG[3]) unless @id == 0
-        return nil
-      elsif(from.eql? "left")
-        unless(@id == 0)
-          $Comm.send(@id, "right", $MSG[3]) if @buffer.size == 0
-          $Comm.send(@id, "left", $MSG[3]) unless @buffer.size == 0
-        else
-          return nil unless @buffer.size == 0
-          @work = false
-          $die = true
-          $Comm.send(@id, "right", $MSG[4])
-        end
-      end
-      return nil
-    end  
+    # if(msg.eql? $MSG[3])
+    #   if(from.eql? "right")
+    #     $Comm.send(@id, "left", $MSG[3]) unless @id == 0
+    #     return nil
+    #   elsif(from.eql? "left")
+    #     unless(@id == 0)
+    #       $Comm.send(@id, "right", $MSG[3]) if @buffer.size == 0
+    #       $Comm.send(@id, "left", $MSG[3]) unless @buffer.size == 0
+    #     else
+    #       return nil unless @buffer.size == 0
+    #       @work = false
+    #       $die = true
+    #       $Comm.send(@id, "right", $MSG[4])
+    #     end
+    #   end
+    #   return nil
+    # end  
     
-    if(msg.eql? $MSG[4])
-      @work = false
-      $Comm.send(@id, "right", $MSG[4])
-    end   
+    # if(msg.eql? $MSG[4])
+    #   @work = false
+    #   $Comm.send(@id, "right", $MSG[4])
+    # end   
     nil 
   end
   

@@ -30,7 +30,7 @@ end
 
 $count = 3
 $seed = 100500
-$task_size = 100
+$task_size = 3
 $max_diff = 1000
 $die = false
 
@@ -40,17 +40,27 @@ $Comm = Comm.new($count)
 $Feed = Feed.new($seed, 1, $task_size, $max_diff)
 $Feed.debug_print
 #comm_test()
-$count.times {|i| Cpu.new(i)}
+cpu = Array.new
+$count.times {|i| cpu.push Cpu.new(i)}
+
 
 t = Thread.new do
   a = 20
   while(a) do
-    a -= 1 if $die
-    $Log.add "count"
-    sleep 1/1000
+    x = 0
+    cpu.each {|c| x += c.buff_size}
+    if (x == 0)
+      cpu.each {|c| c.work = false}
+      break
+    end
+    $Log.add "X=" + x.to_s
+    #a -= 1 if $die
+    #$Log.add "count"
+
+    sleep 1/100
   end
 end
-
+t.run
 
 $Log.print
 t.join
