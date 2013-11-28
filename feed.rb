@@ -1,5 +1,5 @@
 class Feed
-  attr_accessor :work
+  attr_accessor :work, :done_task
   def initialize(seed, type, size, max_diff)
     @seed = seed
     @type = type
@@ -15,6 +15,7 @@ class Feed
     tree_gen if type == 4
     hard_gen if type == 5
     monitor
+
   end
   
   def atomic_gen
@@ -48,9 +49,9 @@ class Feed
     @ready_task.pop
   end
   
-  def done_task(task_id)
-    @done_task.push task.id
-  end
+  # def done_task(task_id)
+  #   @done_task.push task.id
+  # end
   
   def monitor
     Thread.new do

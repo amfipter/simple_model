@@ -30,7 +30,7 @@ end
 
 $count = 3
 $seed = 100500
-$task_size = 20
+$task_size = 50
 $max_diff = 1000
 $die = false
 
@@ -51,6 +51,7 @@ t = Thread.new do
     cpu.each {|c| x += c.buff_size}
     if (x == 0)
       cpu.each {|c| c.work = false}
+      puts $Feed.done_task.size
       break
     end
     puts "X=" + x.to_s
@@ -63,7 +64,7 @@ t = Thread.new do
 end
 t.run
 
-$Log.print
+#$Log.print
 t.join
 exit
 

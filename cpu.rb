@@ -1,4 +1,5 @@
 require 'thread'
+require './feed.rb'
 
 class Cpu
   attr_accessor :work
@@ -24,16 +25,16 @@ class Cpu
         #puts "driver: #{@id}: #{@buff_size}"
         flag = false
         data = nil
-        @semaphore.synchronize do
-          if(@buffer.size > 10)
-            if(@free_r or @free_l)
-              flag = true
-              data = buffer.pop
-            end
+        @semaphore.lock
+        if(@buffer.size > 10)
+          if(@free_r or @free_l)
+            flag = true
+            data = @buffer.pop
           end
-          @buff_size = @buffer.size
-          #puts "1"
         end
+        @buff_size = @buffer.size
+       #puts "1"
+        
         @semaphore.unlock
         #puts "2"
         if(flag)
@@ -61,22 +62,23 @@ class Cpu
         flag = false
         data = nil
         #puts @semaphore.locked?
-        @semaphore.synchronize do
-          
-          unless(@buffer.empty?)
-            flag = true
-            data = @buffer.pop
-          end
-          @buff_size = @buffer.size
+        @semaphore.lock
+        unless(@buffer.empty?)
+          flag = true
+          data = @buffer.pop
         end
+        @buff_size = @buffer.size
         @semaphore.unlock
-        puts '=====> ' + @id.to_s + ' ' + @buff_size if f
+        puts '=====> ' + @id.to_s + ' ' + @buff_size.to_s if f
         f = false if @buff_size == 0
         f = true if @buff_size > 0
         unless(flag)
           sleep 1/500
         else
           data.start
+          @semaphore.lock
+          $Feed.done_task.push data
+          @semaphore.unlock
           log("load (executor): #{@buff_size}")
         end
       end
@@ -114,10 +116,9 @@ class Cpu
       a = $Feed.get_ready_task
       #puts a.class
       unless(a.nil?) 
-        @semaphore.synchronize do
-          @buffer.push a 
-          @buff_size += 1
-        end
+        @semaphore.lock
+        @buffer.push a 
+        @buff_size += 1
         @semaphore.unlock
       end
       #puts @buffer.size unless @buffer.size == 10
@@ -134,12 +135,10 @@ class Cpu
     return nil if from.nil?
     if(msg.class.eql? Task)
       puts "#{@id} msg get"
-      @semaphore.synchronize do
-        @buffer.push Task
-        @buff_size += 1
-      end
-      @semaphore.unlock
-      
+      @semaphore.lock
+      @buffer.push msg
+      @buff_size += 1
+      @semaphore.unlock  
       log("load: #{@buff_size}")
       return nil
     end
