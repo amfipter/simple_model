@@ -1,10 +1,12 @@
 class Log 
   def initialize
     @data = Array.new
+    @last_str = ''
   end
   
   def add(str)
-    @data.push str
+    @data.push str unless str.eql?(@last_str)
+    @last_str = str
   end
   
   def print

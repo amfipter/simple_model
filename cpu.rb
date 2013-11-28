@@ -78,6 +78,7 @@ class Cpu
           data.start
           @semaphore.lock
           $Feed.done_task.push data
+          @buff_size -=1
           @semaphore.unlock
           log("load (executor): #{@buff_size}")
         end

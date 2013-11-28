@@ -45,13 +45,13 @@ class Feed
   
   def get_ready_task
     #puts @ready_task.to_s unless @ready_task.empty?
-    $Log.add "FEED: " + @ready_task.size.to_s 
+    #$Log.add "FEED: " + @ready_task.size.to_s 
     @ready_task.pop
   end
   
   # def done_task(task_id)
   #   @done_task.push task.id
-  # end
+  # end 
   
   def monitor
     Thread.new do

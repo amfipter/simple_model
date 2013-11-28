@@ -64,8 +64,9 @@ t = Thread.new do
 end
 t.run
 
-#$Log.print
+
 t.join
+#$Log.print
 exit
 
 
