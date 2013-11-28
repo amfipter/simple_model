@@ -1,3 +1,5 @@
+require 'thread'
+
 class Cpu
   attr_accessor :work
   def initialize(id, actual_buff_size = 10)
@@ -6,6 +8,9 @@ class Cpu
     @buff_size = actual_buff_size
     @free_r = false
     @free_l = false
+    @asked_r = false
+    @asked_l = false
+    @semaphore = Mutex.new
     @work = true
     driver
     executor
@@ -16,18 +21,30 @@ class Cpu
     tr = Thread.new do
       while(@work) do
         feed if @id == 0
-        #puts "driver: #{@id}: #{@buffer.size}"
-        if(@buffer.size > 10)
+        #puts "driver: #{@id}: #{@buff_size}"
+        flag = false
+        data = nil
+        @semaphore.synchronize do
+          if(@buffer.size > 10)
+            if(@free_r or @free_l)
+              flag = true
+              data = buffer.pop
+            end
+          end
+          @buff_size = @buffer.size
+          #puts "1"
+        end
+        @semaphore.unlock
+        #puts "2"
+        if(flag)
           if(@free_r)
             @free_r = false
-            t = @buffer.pop
-            $Comm.send(@id, "right", t)
-            log("load: (driver)#{@buffer.size}")
+            $Comm.send(@id, "right", data)
+            log("load: (driver)#{@buff_size}")
           elsif(@free_l)
             @free_l = false
-            t = @buffer.pop
-            $Comm.send(@id, "left", t)
-            log("load: (driver)#{@buffer.size}")
+            $Comm.send(@id, "left", data)
+            log("load: (driver)#{@buff_size}")
           end
         end
         sleep 1/1000
@@ -38,15 +55,29 @@ class Cpu
   end
   
   def executor
+    f = true
     tr = Thread.new do
       while(@work) do
-        puts '=====> ' + @id.to_s + ' ' + @buffer.size.to_s
-        if(@buffer.empty?)
+        flag = false
+        data = nil
+        #puts @semaphore.locked?
+        @semaphore.synchronize do
+          
+          unless(@buffer.empty?)
+            flag = true
+            data = @buffer.pop
+          end
+          @buff_size = @buffer.size
+        end
+        @semaphore.unlock
+        puts '=====> ' + @id.to_s + ' ' + @buff_size if f
+        f = false if @buff_size == 0
+        f = true if @buff_size > 0
+        unless(flag)
           sleep 1/500
         else
-          task = @buffer.pop
-          task.start
-          log("load (executor): #{@buffer.size}")
+          data.start
+          log("load (executor): #{@buff_size}")
         end
       end
     end
@@ -57,8 +88,15 @@ class Cpu
   def communicator
     tr = Thread.new do
       while(@work) do
-        ask_free("right") unless @free_r
-        ask_free("left") unless @free_l
+
+        unless (@free_r or @asked_r)
+          ask_free("right") 
+          @asked_r = true
+        end
+        unless (@free_l or @asked_l)
+          ask_free("left") 
+          @asked_l = true
+        end
         get_msg
         sleep 1/1000
       end
@@ -68,16 +106,22 @@ class Cpu
   end
 
   def buff_size
-    @buffer.size
+    @buff_size
   end
   
   def feed
-    if(@buffer.size < 15)
+    if(@buff_size < 15)
       a = $Feed.get_ready_task
       #puts a.class
-      @buffer.push a unless a.nil?
+      unless(a.nil?) 
+        @semaphore.synchronize do
+          @buffer.push a 
+          @buff_size += 1
+        end
+        @semaphore.unlock
+      end
       #puts @buffer.size unless @buffer.size == 10
-      log("load (feed): #{@buffer.size}")
+      log("load (feed): #{@buff_size}")
     end
   end
   
@@ -89,19 +133,30 @@ class Cpu
     from, msg = $Comm.recv(@id)
     return nil if from.nil?
     if(msg.class.eql? Task)
-      #puts "lol"
-      @buffer.push Task
-      log("load: #{@buffer.size}")
+      puts "#{@id} msg get"
+      @semaphore.synchronize do
+        @buffer.push Task
+        @buff_size += 1
+      end
+      @semaphore.unlock
+      
+      log("load: #{@buff_size}")
       return nil
     end
     if(msg.eql? $MSG[2])
       #puts @free_l
-      @free_r = true if from.eql? 'right'
-      @free_l = true if from.eql? 'left'
+      if(from.eql? 'right')
+        @free_r = true 
+        @asked_r = false
+      end
+      if(from.eql? 'left')
+        @free_l = true 
+        @asked_l = false
+      end
       return nil
     end
     if(msg.eql? $MSG[1])
-      s = @buffer.size
+      s = @buff_size
       if(s < 15)
         $Comm.send(@id, from, $MSG[2])
       end
