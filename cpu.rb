@@ -12,6 +12,7 @@ class Cpu
     @asked_r = false
     @asked_l = false
     @semaphore = Mutex.new
+    @@semaphore_ = Mutex.new
     @work = true
     driver
     executor
@@ -21,7 +22,9 @@ class Cpu
   def driver
     tr = Thread.new do
       while(@work) do
-        feed if @id == 0
+        @@semaphore_.lock
+        feed
+        @@semaphore_.unlock
         #puts "driver: #{@id}: #{@buff_size}"
         flag = false
         data = nil
@@ -76,11 +79,11 @@ class Cpu
           sleep 1/500
         else
           data.start
-          @semaphore.lock
+          @@semaphore_.lock
           $Feed.done_task.push data
           @buff_size -=1
-          @semaphore.unlock
           log("load (executor): #{@buff_size}")
+          @@semaphore_.unlock
         end
       end
     end
@@ -120,10 +123,11 @@ class Cpu
         @semaphore.lock
         @buffer.push a 
         @buff_size += 1
+        log("load (feed): #{@buff_size}")
         @semaphore.unlock
       end
       #puts @buffer.size unless @buffer.size == 10
-      log("load (feed): #{@buff_size}")
+     
     end
   end
   
@@ -139,8 +143,9 @@ class Cpu
       @semaphore.lock
       @buffer.push msg
       @buff_size += 1
-      @semaphore.unlock  
       log("load: #{@buff_size}")
+      @semaphore.unlock  
+      
       return nil
     end
     if(msg.eql? $MSG[2])

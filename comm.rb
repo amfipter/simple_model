@@ -5,16 +5,20 @@ class Comm
     @data.size.times do |i|
       @data[i] = Array.new
     end
+    @semaphore = Mutex.new
   end
   
   def send(id, to, msg)
+    @semaphore.lock
     to_id = (id + 1) % @count if to.eql? "right"
     to_id = (id - 1) % @count if to.eql? "left" 
     @data[to_id].push Msg.new(id, to_id, msg)
     log("send from #{id} to #{to_id} msg '#{msg}'")
+    @semaphore.unlock
   end
   
   def recv(id)
+    @semaphore.lock
     a = @data[id].pop
     log("receive id = #{id} from #{a.id_from} msg #{a.msg}") unless a.nil?
     unless a.nil?
@@ -23,6 +27,7 @@ class Comm
       to = 'right' if id - a.id_from == @count - 1
       return to, a.msg 
     end
+    @semaphore.unlock
     return nil, nil
   end
   
