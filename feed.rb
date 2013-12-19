@@ -1,3 +1,4 @@
+require './task_generator.rb'
 class Feed
   attr_accessor :work, :done_task
   def initialize(seed, type, size, max_diff)
@@ -19,15 +20,16 @@ class Feed
   end
   
   def atomic_gen
-    prng = Random.new(@seed)
-    @size.times do |i|
-      a = Task.new(prng.rand(@max_diff), i, nil)
-      a.ready = true
-      #puts a.to_s
-      log("Task created " + a.to_s)
-      @tasks.push a
-      #log("Task created " + a.to_s)
-    end
+    # prng = Random.new(@seed)
+    # @size.times do |i|
+    #   a = Task.new(prng.rand(@max_diff), i, nil)
+    #   a.ready = true
+    #   #puts a.to_s
+    #   log("Task created " + a.to_s)
+    #   @tasks.push a
+    #   #log("Task created " + a.to_s)
+    # end
+    @tasks = Task_generator.simple(@size)
   end
   
   def most_atomic_gen

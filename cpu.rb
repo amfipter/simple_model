@@ -10,7 +10,7 @@ class Cpu
     @free_r = false
     @free_l = false
     @asked_r = false
-    @asked_l = false
+    @asked_l = false 
     @semaphore = Mutex.new
     @@semaphore_ = Mutex.new
     @work = true

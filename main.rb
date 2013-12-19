@@ -5,6 +5,9 @@ require './cpu.rb'
 require './feed.rb'
 require './log.rb'
 require './util.rb'
+require './task_generator.rb'
+require './balancer.rb'
+
 
 #s
 
