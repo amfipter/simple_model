@@ -20,15 +20,6 @@ class Feed
   end
   
   def atomic_gen
-    # prng = Random.new(@seed)
-    # @size.times do |i|
-    #   a = Task.new(prng.rand(@max_diff), i, nil)
-    #   a.ready = true
-    #   #puts a.to_s
-    #   log("Task created " + a.to_s)
-    #   @tasks.push a
-    #   #log("Task created " + a.to_s)
-    # end
     @tasks = Task_generator.simple(@size)
   end
   

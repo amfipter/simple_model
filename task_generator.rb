@@ -11,6 +11,11 @@ module Task_generator
     tasks
   end
 
+  def self.generate(type, *arg)
+    nil
+  end
+  
+
   def self.log(str)
     $Log.add "Task_generator: " + str
   end
