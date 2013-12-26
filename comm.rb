@@ -6,6 +6,7 @@ class Comm
       @data[i] = Array.new
     end
     @semaphore = Mutex.new
+    @lat = 0.001
   end
   
   def send(id, to, msg)
@@ -20,6 +21,10 @@ class Comm
   def recv(id)
     @semaphore.lock
     a = @data[id].pop
+    if(Time.new.to_f - a.time < @lat)
+      @data[id].push a
+      return nil, nil
+    end
     log("receive id = #{id} from #{a.id_from} msg #{a.msg}") unless a.nil?
     unless a.nil?
       to = 'left'
@@ -37,10 +42,11 @@ class Comm
 end
 
 class Msg
-  attr_reader :msg, :id_from, :id_to
+  attr_reader :msg, :id_from, :id_to, :time
   def initialize(from, to, msg)
     @id_from  = from
     @id_to = to
     @msg = msg
+    @time = Time.new.to_f
   end
 end

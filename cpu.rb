@@ -211,3 +211,4 @@ class Cpu
     $Log.add "Cpu " + @id.to_s + ' ' + str
   end
 end
+
