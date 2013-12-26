@@ -15,7 +15,7 @@ class Feed
     most_tree_gen if type == 3
     tree_gen if type == 4
     hard_gen if type == 5
-    monitor
+    monitor()
 
   end
   

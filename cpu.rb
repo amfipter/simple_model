@@ -41,15 +41,21 @@ class Cpu
         @semaphore.unlock
         #puts "2"
         if(flag)
-          if(@free_r)
-            @free_r = false
-            $Comm.send(@id, "right", data)
-            log("load: (driver)#{@buff_size}")
-          elsif(@free_l)
-            @free_l = false
-            $Comm.send(@id, "left", data)
-            log("load: (driver)#{@buff_size}")
-          end
+          send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
+          @semaphore.lock
+          $Comm.send(@id, send_to, data)
+          @semaphore.unlock
+          @free_r = false
+          @free_l = false
+          # if(@free_r)
+          #   @free_r = false
+          #   $Comm.send(@id, "right", data)
+          #   log("load: (driver)#{@buff_size}")
+          # elsif(@free_l)
+          #   @free_l = false
+          #   $Comm.send(@id, "left", data)
+          #   log("load: (driver)#{@buff_size}")
+          # end
         end
         sleep 1/1000
       end
@@ -117,7 +123,9 @@ class Cpu
   
   def feed
     if(@buff_size < 15)
+      @semaphore.lock
       a = $Feed.get_ready_task
+      @semaphore.unlock
       #puts a.class
       unless(a.nil?) 
         @semaphore.lock
@@ -132,11 +140,16 @@ class Cpu
   end
   
   def ask_free(to)
+    @semaphore.lock
     $Comm.send(@id, to, $MSG[1])
+    @semaphore.unlock
   end
   
   def get_msg
+    @semaphore.lock
     from, msg = $Comm.recv(@id)
+    @semaphore.unlock
+
     return nil if from.nil?
     if(msg.class.eql? Task)
       puts "#{@id} msg get"
@@ -163,7 +176,9 @@ class Cpu
     if(msg.eql? $MSG[1])
       s = @buff_size
       if(s < 15)
+        @semaphore.lock
         $Comm.send(@id, from, $MSG[2])
+        @semaphore.unlock
       end
       return nil
     end
