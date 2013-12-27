@@ -31,9 +31,9 @@ def comm_test()
 end
 
 
-$count = 3
+$count = ARGV[0].to_i
 $seed = 100500
-$task_size = 50
+$task_size = ARGV[1].to_i
 $max_diff = 1000
 $die = false
 
@@ -44,6 +44,7 @@ $Feed = Feed.new($seed, 1, $task_size, $max_diff)
 $Feed.debug_print
 #comm_test()
 cpu = Array.new
+t1 = Time.new.to_f
 $count.times {|i| cpu.push Cpu.new(i)}
 
 
@@ -69,6 +70,8 @@ t.run
 
 
 t.join
+puts "TIME"
+puts (Time.new.to_f-t1)
 #$Log.print
 exit
 
