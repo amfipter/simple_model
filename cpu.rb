@@ -47,8 +47,9 @@ class Cpu
         @semaphore.unlock
         #puts "2"
         if(flag)
-          send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
+          #send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
           @semaphore.lock
+          send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1)
           $Comm.send(@id, send_to, data)
           @semaphore.unlock
           @free_r = false
@@ -106,18 +107,21 @@ class Cpu
   
   def communicator
     tr = Thread.new do
+      a = 0
       while(@work) do
 
-        unless (@free_r or @asked_r)
-          ask_free("right") 
-          @asked_r = true
-        end
-        unless (@free_l or @asked_l)
-          ask_free("left") 
-          @asked_l = true
-        end
+        # unless (@free_r or @asked_r)
+        #   ask_free("right") 
+        #   @asked_r = true
+        # end
+        # unless (@free_l or @asked_l)
+        #   ask_free("left") 
+        #   @asked_l = true
+        # end
+        sync_status() if a % 10 == 0
         get_msg
         sleep 1/1000
+        a += 1
       end
     end
     tr.run
