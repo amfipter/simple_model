@@ -13,6 +13,8 @@ class Comm
     @semaphore.lock
     to_id = (id + 1) % @count if to.eql? "right"
     to_id = (id - 1) % @count if to.eql? "left" 
+    to_id = (id + 2) % @count if to.eql? "right_1"
+    to_id = (id - 2) % @count if to.eql? "left_1"
     @data[to_id].push Msg.new(id, to_id, msg)
     log("send from #{id} to #{to_id} msg '#{msg}'")
     @semaphore.unlock
@@ -30,6 +32,10 @@ class Comm
       to = 'left'
       to = 'right' if a.id_from - id == 1
       to = 'right' if id - a.id_from == @count - 1
+      to = 'left_1' if id - a.id_from == 2
+      to = 'left_1' if a.id_from - id == @count - 2
+      to = 'right_1' if a.id_from - id == 2
+      to = 'right_1' if id - a.id_from == @count - 2
       return to, a.msg 
     end
     @semaphore.unlock

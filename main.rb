@@ -50,10 +50,20 @@ $count.times {|i| cpu.push Cpu.new(i)}
 
 t = Thread.new do
   a = 20
+  t_all = 0
+  t_arr = Array.new
+  t_max = 0
   while(a) do
     x = 0
     cpu.each {|c| x += c.buff_size}
     if (x == 0)
+      cpu.each do |i|
+        puts "ID: " + i.id.to_s + " DONE: " + i.done.to_s
+        t_all += i.done
+        t_max = i.done if i.done > t_max
+        t_arr.push i.done
+      end
+      puts "ALL TASKS: " + t_all.to_s
       cpu.each {|c| c.work = false}
       puts $Feed.done_task.size
       break
@@ -65,6 +75,15 @@ t = Thread.new do
 
     sleep 1
   end
+  t_arr = t_arr.to_s
+  t_arr.delete! '['
+  t_arr.delete! ']'
+  t_arr.gsub! ',', ''
+  puts t_arr
+
+  File.open("plot.mat", 'w') {|file| file.puts("x = [0:#{$count - 1}]; y = [#{t_arr}]; xf = [0:0.1:#{$count - 1}]; cub = interp1 (x, y, xf, \"spline\"); plot(xf, cub, 'linewidth', 1); input('');") and file.close}
+  #{}`octave plot.mat`
+  #{}`rm plot.mat`
 end
 t.run
 

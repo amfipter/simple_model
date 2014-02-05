@@ -3,6 +3,7 @@ require './feed.rb'
 
 class Cpu
   attr_accessor :work
+  attr_reader :id, :done
   def initialize(id, actual_buff_size = 10)
     @buffer = Array.new
     @id = id
@@ -14,6 +15,11 @@ class Cpu
     @semaphore = Mutex.new
     @@semaphore_ = Mutex.new
     @work = true
+    @done = 0
+    @left_status_1 = nil
+    @left_status = nil
+    @right_status = nil
+    @right_status_1 = nil
     driver
     executor
     communicator
@@ -23,7 +29,7 @@ class Cpu
     tr = Thread.new do
       while(@work) do
         @@semaphore_.lock
-        feed
+        feed if @id == 0
         @@semaphore_.unlock
         #puts "driver: #{@id}: #{@buff_size}"
         flag = false
@@ -90,6 +96,7 @@ class Cpu
           @buff_size -=1
           log("load (executor): #{@buff_size}")
           @@semaphore_.unlock
+          @done += 1
         end
       end
     end
@@ -144,6 +151,15 @@ class Cpu
     $Comm.send(@id, to, $MSG[1])
     @semaphore.unlock
   end
+
+  def sync_status()
+    @semaphore.lock
+    $Comm.send(@id, 'left_1', 'status')
+    $Comm.send(@id, 'left', 'status')
+    $Comm.send(@id, 'right_1', 'status')
+    $Comm.send(@id, 'right', 'status')
+    @semaphore.unlock
+  end
   
   def get_msg
     @semaphore.lock
@@ -172,6 +188,29 @@ class Cpu
         @asked_l = false
       end
       return nil
+    end
+
+    @semaphore.lock
+    unless (msg=~/state/)
+      msg.delete! 'state'
+      if (msg.eql? '')
+        $Comm.send(@id, from, "state#{@buff_size}")
+      elsif(from.eql? 'left_1')
+        left_status_1 = msg.to_i
+      elsif (from.eql? 'left')
+        left_status = msg.to_i
+      elsif (from.eql? 'right')
+        right_status = msg.to_i
+      elsif (from.eql? 'right_1')
+        right_status_1 = msg.to_i
+      end
+      puts "state from #{msg.to_i}"
+    end
+    @semaphore.unlock
+          
+          
+          
+      
     end
     if(msg.eql? $MSG[1])
       s = @buff_size
