@@ -36,6 +36,7 @@ $seed = 100500
 $task_size = ARGV[1].to_i
 $max_diff = 1000
 $die = false
+$net = nil
 
 $Log = Log.new
 $Comm = Comm.new($count)
@@ -75,14 +76,14 @@ t = Thread.new do
 
     sleep 1
   end
-  t_arr = t_arr.to_s
-  t_arr.delete! '['
-  t_arr.delete! ']'
-  t_arr.gsub! ',', ''
-  puts t_arr
+  # t_arr = t_arr.to_s
+  # t_arr.delete! '['
+  # t_arr.delete! ']'
+  # t_arr.gsub! ',', ''
+  # puts t_arr
 
-  File.open("plot.mat", 'w') {|file| file.puts("x = [0:#{$count - 1}]; y = [#{t_arr}]; xf = [0:0.1:#{$count - 1}]; cub = interp1 (x, y, xf, \"spline\"); plot(xf, cub, 'linewidth', 1); input('');") and file.close}
-  #{}`octave plot.mat`
+  # File.open("plot.mat", 'w') {|file| file.puts("x = [0:#{$count - 1}]; y = [#{t_arr}]; xf = [0:0.1:#{$count - 1}]; cub = interp1 (x, y, xf, \"spline\"); plot(xf, cub, 'linewidth', 1); input('');") and file.close}
+  # #{}`octave plot.mat`
   #{}`rm plot.mat`
 end
 t.run

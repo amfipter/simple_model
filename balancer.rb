@@ -1,3 +1,5 @@
+require './ai.rb'
+
 class Balancer
   def initialize
     nil
@@ -20,7 +22,9 @@ class Balancer
   end
 
   def self.simple_ai_balancer(left_load_1, left_load, current_load, right_load, right_load_1)
+    puts "LOL"
     if($net.nil?)
+      puts "INIT AI"
       $net = Ai.create()
       Ai.train($net)
     end
@@ -70,4 +74,5 @@ module Balancer_tools
       out.push 0 if i != m
     end
     out
+  end
 end

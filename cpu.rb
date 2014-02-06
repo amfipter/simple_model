@@ -27,6 +27,9 @@ class Cpu
   
   def driver
     tr = Thread.new do
+      @semaphore.lock
+      puts "DRIVER #{@id} START."
+      @semaphore.unlock
       while(@work) do
         @@semaphore_.lock
         feed if @id == 0
@@ -47,33 +50,29 @@ class Cpu
         @semaphore.unlock
         #puts "2"
         if(flag)
-          #send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
           @semaphore.lock
-          send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1)
+          send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
+          #send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1)
           $Comm.send(@id, send_to, data)
           @semaphore.unlock
-          @free_r = false
-          @free_l = false
-          # if(@free_r)
-          #   @free_r = false
-          #   $Comm.send(@id, "right", data)
-          #   log("load: (driver)#{@buff_size}")
-          # elsif(@free_l)
-          #   @free_l = false
-          #   $Comm.send(@id, "left", data)
-          #   log("load: (driver)#{@buff_size}")
-          # end
         end
         sleep 1/1000
       end
+      @semaphore.lock
+      puts "DRIVER #{@id} STOP."
+      @semaphore.unlock
     end
     tr.run
+
     #tr.join
   end
   
   def executor
     f = true
     tr = Thread.new do
+      @semaphore.lock
+      puts "EXECUTOR #{@id} START."
+      @semaphore.unlock
       while(@work) do
         flag = false
         data = nil
@@ -100,6 +99,9 @@ class Cpu
           @done += 1
         end
       end
+      @semaphore.lock
+      puts "EXECUTOR #{@id} STOP."
+      @semaphore.unlock
     end
     tr.run
     #tr.join
@@ -107,6 +109,9 @@ class Cpu
   
   def communicator
     tr = Thread.new do
+      @semaphore.lock
+      puts "COMMUNICATOR #{@id} START."
+      @semaphore.unlock
       a = 0
       while(@work) do
 
@@ -123,6 +128,9 @@ class Cpu
         sleep 1/1000
         a += 1
       end
+      @semaphore.lock
+      puts "COMMUNICATOR #{@id} STOP."
+      @semaphore.unlock
     end
     tr.run
     #tr.join
@@ -137,7 +145,7 @@ class Cpu
       @semaphore.lock
       a = $Feed.get_ready_task
       @semaphore.unlock
-      #puts a.class
+      puts a.class
       unless(a.nil?) 
         @semaphore.lock
         @buffer.push a 
@@ -145,7 +153,7 @@ class Cpu
         log("load (feed): #{@buff_size}")
         @semaphore.unlock
       end
-      #puts @buffer.size unless @buffer.size == 10
+      puts @buffer.size unless @buffer.size == 10
      
     end
   end
@@ -208,14 +216,10 @@ class Cpu
       elsif (from.eql? 'right_1')
         right_status_1 = msg.to_i
       end
-      puts "state from #{msg.to_i}"
+      puts "id: #{@id}; state from #{from}; data: #{msg.to_i}"
     end
     @semaphore.unlock
-          
-          
-          
-      
-    end
+    
     if(msg.eql? $MSG[1])
       s = @buff_size
       if(s < 15)
@@ -225,28 +229,6 @@ class Cpu
       end
       return nil
     end
-    # if(msg.eql? $MSG[3])
-    #   if(from.eql? "right")
-    #     $Comm.send(@id, "left", $MSG[3]) unless @id == 0
-    #     return nil
-    #   elsif(from.eql? "left")
-    #     unless(@id == 0)
-    #       $Comm.send(@id, "right", $MSG[3]) if @buffer.size == 0
-    #       $Comm.send(@id, "left", $MSG[3]) unless @buffer.size == 0
-    #     else
-    #       return nil unless @buffer.size == 0
-    #       @work = false
-    #       $die = true
-    #       $Comm.send(@id, "right", $MSG[4])
-    #     end
-    #   end
-    #   return nil
-    # end  
-    
-    # if(msg.eql? $MSG[4])
-    #   @work = false
-    #   $Comm.send(@id, "right", $MSG[4])
-    # end   
     nil 
   end
   
