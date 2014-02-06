@@ -22,25 +22,28 @@ class Balancer
   end
 
   def self.simple_ai_balancer(left_load_1, left_load, current_load, right_load, right_load_1, free_l, free_r)
-    #puts "LOL"
+    if (left_load_1.nil? or left_load.nil? or current_load.nil? or right_load.nil? or right_load_1.nil?)
+      return nil
+    end
+    #puts "DUCK SUCK!!"
     if($net.nil?)
       puts "INIT AI"
       $net = Ai.create()
       Ai.train($net)
     end
     #puts __LINE__
-    # main_res = $net.eval([left_load, current_load, right_load])
-    # main = Balancer_tools.vector_extract(res)
-    # left_res = $net.eval([left_load_1, left_load, current_load])
-    # left = Balancer_tools.vector_extract(left_res)
-    # right_res = $net.eval([current_load, right_load, right_load_1])
-    # right = Balancer_tools.vector_extract(right_res)
-    main_res = [rand, rand, rand]
+    main_res = $net.eval([left_load, current_load, right_load])
     main = Balancer_tools.vector_extract(main_res)
-    left_res = [rand, rand, rand]
+    left_res = $net.eval([left_load_1, left_load, current_load])
     left = Balancer_tools.vector_extract(left_res)
-    right_res = [rand, rand, rand]
+    right_res = $net.eval([current_load, right_load, right_load_1])
     right = Balancer_tools.vector_extract(right_res)
+    # main_res = [rand, rand, rand]
+    # main = Balancer_tools.vector_extract(main_res)
+    # left_res = [rand, rand, rand]
+    # left = Balancer_tools.vector_extract(left_res)
+    # right_res = [rand, rand, rand]
+    # right = Balancer_tools.vector_extract(right_res)
    # puts __LINE__
     if(main[2] == 1) 
       if(left[0] == 1 and free_l)

@@ -2,7 +2,8 @@ require "ai4r"
 
 module Ai
   def self.create()
-    net = Ai4r::NeuralNetwork::Backpropagation.new([3, 25, 25, 7, 3]) #parameters chosen without any reason
+    net = Ai4r::NeuralNetwork::Backpropagation.new([3, 24, 22, 3]) #parameters chosen without any reason
+    #net = Ai4r::NeuralNetwork::Backpropagation.new([3, 2, 2, 3]) #for test
     net
   end
 

@@ -16,10 +16,10 @@ class Cpu
     @@semaphore_ = Mutex.new
     @work = true
     @done = 0
-    @left_status_1 = nil
-    @left_status = nil
-    @right_status = nil
-    @right_status_1 = nil
+    @left_status_1 = -1
+    @left_status = -1
+    @right_status = -1
+    @right_status_1 = -1
     unless (debug_mode.nil?)
       return
     end
@@ -41,9 +41,9 @@ class Cpu
 
         
         #send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
-        #puts send_to.to_s + ">>>>>>>>>>>>>>"
-        send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1, free_l, free_r)
-        #puts send_to.to_s + "<<<<<<<<<<<<<<"
+        #puts send_to.to_s + ">>>>>>>>>>>>>>" + @id.to_s
+        send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1, @free_l, @free_r)
+        #puts ">>>>>" + send_to.to_s
         @semaphore.lock
         unless (send_to.nil?)
           data = @buffer.pop
@@ -52,7 +52,7 @@ class Cpu
           set_busy(send_to)
         end
         @semaphore.unlock
-        sleep 1/1
+        sleep 1/1000
       end
       @semaphore.lock
       puts "DRIVER #{@id} STOP."
@@ -118,6 +118,7 @@ class Cpu
         #puts @id
         sync_status() if a % 10 == 0
         ask_free() if a % 10 == 0
+        #puts @left_status_1.to_s + ' ' + @left_status.to_s + ' ' + @right_status.to_s + ' ' + @right_status_1.to_s if a % 100
         get_msg
         sleep 1/1000
         a += 1
@@ -136,7 +137,8 @@ class Cpu
   
   def feed
     @semaphore.lock
-    while(@buff_size < 15) do
+   # while(@buff_size < 15) do
+    if (@buff_size < 15)
       a = $Feed.get_ready_task
       #puts a.class
       unless(a.nil?) 
@@ -144,8 +146,8 @@ class Cpu
         @buff_size += 1
         puts "load (feed): #{@buff_size}"
         log("load (feed): #{@buff_size}")
-      else
-        break
+      # else
+      #   break
       end
       #puts @buffer.size unless @buffer.size == 10
      
@@ -185,6 +187,8 @@ class Cpu
     @semaphore.unlock
 
     return nil if from.nil?
+    # puts msg
+    # puts from
     if(msg.class.eql? Task)
       #puts "#{@id} msg get"
       @semaphore.lock
@@ -209,18 +213,21 @@ class Cpu
     end
 
     @semaphore.lock
-    unless (msg=~/state/)
-      msg.delete! 'state'
+    if (msg=~/status/)
+      # puts msg
+      msg.delete! 'status'
       if (msg.eql? '')
-        $Comm.send(@id, from, "state#{@buff_size}")
+        # puts "gg"
+        # puts from.to_s
+        $Comm.send(@id, from, "status#{@buff_size}")
       elsif(from.eql? 'left_1')
-        left_status_1 = msg.to_i
+        @left_status_1 = msg.to_i
       elsif (from.eql? 'left')
-        left_status = msg.to_i
+        @left_status = msg.to_i
       elsif (from.eql? 'right')
-        right_status = msg.to_i
+        @right_status = msg.to_i
       elsif (from.eql? 'right_1')
-        right_status_1 = msg.to_i
+        @right_status_1 = msg.to_i
       end
       #puts "id: #{@id}; state from #{from}; data: #{msg.to_i}"
     end

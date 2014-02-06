@@ -32,6 +32,8 @@ def comm_test()
   exit
 end
 
+Thread.abort_on_exception=true
+
 #neural network settings
 $disbalance_threshold = 10
 $max_tasks = 25
@@ -42,7 +44,7 @@ $task_size = ARGV[1].to_i
 $max_diff = 1000
 $die = false
 $net = Ai.create()
-#Ai.train($net)
+Ai.train($net)
 
 self_test = Self_test.new
 self_test.common_test(5)
@@ -59,6 +61,12 @@ cpu = Array.new
 t1 = Time.new.to_f
 $count.times {|i| cpu.push Cpu.new(i)}
 
+Signal.trap("TSTP") do
+  puts ''
+  cpu.each do |i|
+    puts "ID: " + i.id.to_s + " DONE: " + i.done.to_s
+  end
+end
 
 t = Thread.new do
   #sleep 1
@@ -66,6 +74,8 @@ t = Thread.new do
   t_all = 0
   t_arr = Array.new
   t_max = 0
+
+
   while(a) do
     x = 0
     t_all = 0
@@ -78,8 +88,8 @@ t = Thread.new do
         t_arr.push i.done
       end
       puts "ALL TASKS: " + t_all.to_s
-      cpu.each {|c| c.work = false}
       puts $Feed.done_task.size
+      cpu.each {|c| c.work = false}
       break
     end
     puts "X=" + x.to_s
