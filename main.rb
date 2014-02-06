@@ -40,15 +40,16 @@ $max_diff = 1000
 $die = false
 $net = nil
 
-# self_test = Self_test.new
-# self_test.common_test
-# exit
+self_test = Self_test.new
+self_test.common_test(5)
+#exit
 
 $Log = Log.new
 $Comm = Comm.new($count)
 
 $Feed = Feed.new($seed, 1, $task_size, $max_diff)
 $Feed.debug_print
+sleep 0.5
 #comm_test()
 cpu = Array.new
 t1 = Time.new.to_f
@@ -56,6 +57,7 @@ $count.times {|i| cpu.push Cpu.new(i)}
 
 
 t = Thread.new do
+  #sleep 1
   a = 20
   t_all = 0
   t_arr = Array.new

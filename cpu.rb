@@ -4,7 +4,7 @@ require './feed.rb'
 class Cpu
   attr_accessor :work
   attr_reader :id, :done
-  def initialize(id, actual_buff_size = 10)
+  def initialize(id, actual_buff_size = 10, debug_mode = nil)
     @buffer = Array.new
     @id = id
     @buff_size = actual_buff_size
@@ -20,6 +20,9 @@ class Cpu
     @left_status = nil
     @right_status = nil
     @right_status_1 = nil
+    unless (debug_mode.nil?)
+      return
+    end
     driver
     executor
     communicator
@@ -27,44 +30,38 @@ class Cpu
   
   def driver
     tr = Thread.new do
-      @semaphore.lock
-      #puts "DRIVER #{@id} START."
-      @semaphore.unlock
+      # @semaphore.lock
+      # puts "DRIVER #{@id} START."
+      # @semaphore.unlock
       while(@work) do
-        @@semaphore_.lock
-        feed if @id == 0
-        @@semaphore_.unlock
-        #puts "driver: #{@id}: #{@buff_size}"
-        flag = false
-        data = nil
+        #@semaphore.lock
+        feed() if @id == 0
+        #@semaphore.unlock
+
         @semaphore.lock
-        if(@buffer.size > 10)
-          if(@free_r or @free_l)
-            flag = true
-            data = @buffer.pop
-          end
-        end
-        @buff_size = @buffer.size
-       #puts "1"
-        
-        @semaphore.unlock
-        #puts "2"
-        if(flag)
-          @semaphore.lock
-          send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
-          #send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1)
+        send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
+        #send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1)
+        unless (send_to.nil?)
+          data = @buffer.pop
           $Comm.send(@id, send_to, data)
-          @semaphore.unlock
+          @buff_size = @buffer.size
+          set_busy(send_to)
         end
+        @semaphore.unlock
         sleep 1/1000
       end
-      @semaphore.lock
-      #puts "DRIVER #{@id} STOP."
-      @semaphore.unlock
+      # @semaphore.lock
+      # puts "DRIVER #{@id} STOP."
+      # @semaphore.unlock
     end
     tr.run
 
     #tr.join
+  end
+
+  def set_busy(to)
+    @free_l = false if to.eql? 'left'
+    @free_r = false if to.eql? 'right'
   end
   
   def executor
@@ -99,9 +96,9 @@ class Cpu
           @done += 1
         end
       end
-      @semaphore.lock
-      #puts "EXECUTOR #{@id} STOP."
-      @semaphore.unlock
+      # @semaphore.lock
+      # #puts "EXECUTOR #{@id} STOP."
+      # @semaphore.unlock
     end
     tr.run
     #tr.join
@@ -114,7 +111,9 @@ class Cpu
       @semaphore.unlock
       a = 0
       while(@work) do
+        #puts @id
         sync_status() if a % 10 == 0
+        ask_free() if a % 10 == 0
         get_msg
         sleep 1/1000
         a += 1
@@ -141,6 +140,7 @@ class Cpu
         @semaphore.lock
         @buffer.push a 
         @buff_size += 1
+        puts "load (feed): #{@buff_size}"
         log("load (feed): #{@buff_size}")
         @semaphore.unlock
       end
@@ -149,9 +149,20 @@ class Cpu
     end
   end
   
-  def ask_free(to)
+  def ask_free()
     @semaphore.lock
-    $Comm.send(@id, to, $MSG[1])
+    unless (@asked_l)
+      #puts "left"
+      $Comm.send(@id, 'left', $MSG[1])
+      @asked_l = true
+    end
+
+    unless (@asked_r)
+      #puts "right"
+      $Comm.send(@id, 'right', $MSG[1])
+      @asked_r = true
+    end
+    
     @semaphore.unlock
   end
 

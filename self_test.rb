@@ -19,7 +19,10 @@ class Self_test
     @Feed = Feed.new(100500, 1, @task_size, 1000, Log.new)
   end
 
-  def common_test()
+  def common_test(t=nil)
+    unless(t.nil?)
+      @test_count = t
+    end
     puts "COMMON TEST"
     @test_count.times do 
       l = log_test()
@@ -91,11 +94,14 @@ class Self_test
     pass = true
     res = Array.new
     p = @Feed.get_ready_task
+    sleep 0.1
     until (p.nil?)
       res.push p
       p = @Feed.get_ready_task
     end
-    # puts res.to_s
+    # puts ''
+    # puts res.size
+    # puts @task_size
     # sleep 10
     pass = false if res.size != @task_size
 
