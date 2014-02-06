@@ -1,7 +1,10 @@
 require './task_generator.rb'
 class Feed
   attr_accessor :work, :done_task
-  def initialize(seed, type, size, max_diff)
+  def initialize(seed, type, size, max_diff, log=nil)
+    unless (log.nil?)
+      $Log = log
+    end
     @seed = seed
     @type = type
     @size = size

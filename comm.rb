@@ -1,12 +1,15 @@
 class Comm
-  def initialize(count)
+  def initialize(count, log=nil)
+    unless (log.nil?)
+      $Log = log
+    end
     @count = count
     @data = Array.new(count)
     @data.size.times do |i|
       @data[i] = Array.new
     end
     @semaphore = Mutex.new
-    @lat = 0.001
+    @lat = 0
   end
   
   def send(id, to, msg)
@@ -23,8 +26,13 @@ class Comm
   def recv(id)
     @semaphore.lock
     a = @data[id].pop
+    if(a.nil?)
+      @semaphore.unlock
+      return nil, nil
+    end
     if(Time.new.to_f - a.time < @lat)
       @data[id].push a
+      @semaphore.unlock
       return nil, nil
     end
     log("receive id = #{id} from #{a.id_from} msg #{a.msg}") unless a.nil?
@@ -36,6 +44,7 @@ class Comm
       to = 'left_1' if a.id_from - id == @count - 2
       to = 'right_1' if a.id_from - id == 2
       to = 'right_1' if id - a.id_from == @count - 2
+      @semaphore.unlock
       return to, a.msg 
     end
     @semaphore.unlock

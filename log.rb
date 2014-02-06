@@ -1,4 +1,5 @@
 class Log 
+  attr_reader :data
   def initialize
     @data = Array.new
     @last_str = ''
@@ -8,11 +9,12 @@ class Log
   def add(str)
     @semaphore.lock
     @data.push str unless str.eql?(@last_str)
-    @last_str = str
+    #@last_str = str
     @semaphore.unlock
   end
   
   def print
+    puts @data.class
     puts @data
   end
 

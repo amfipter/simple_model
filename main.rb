@@ -7,6 +7,8 @@ require './log.rb'
 require './util.rb'
 require './task_generator.rb'
 require './balancer.rb'
+require './ai.rb'
+require './self_test.rb'
 
 
 #s
@@ -37,6 +39,10 @@ $task_size = ARGV[1].to_i
 $max_diff = 1000
 $die = false
 $net = nil
+
+self_test = Self_test.new
+self_test.common_test
+exit
 
 $Log = Log.new
 $Comm = Comm.new($count)
