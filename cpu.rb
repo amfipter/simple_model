@@ -30,17 +30,21 @@ class Cpu
   
   def driver
     tr = Thread.new do
-      # @semaphore.lock
-      # puts "DRIVER #{@id} START."
-      # @semaphore.unlock
+      send_to = nil
+      @semaphore.lock
+      puts "DRIVER #{@id} START."
+      @semaphore.unlock
       while(@work) do
         #@semaphore.lock
         feed() if @id == 0
         #@semaphore.unlock
 
+        
+        #send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
+        #puts send_to.to_s + ">>>>>>>>>>>>>>"
+        send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1, free_l, free_r)
+        #puts send_to.to_s + "<<<<<<<<<<<<<<"
         @semaphore.lock
-        send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
-        #send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1)
         unless (send_to.nil?)
           data = @buffer.pop
           $Comm.send(@id, send_to, data)
@@ -48,11 +52,11 @@ class Cpu
           set_busy(send_to)
         end
         @semaphore.unlock
-        sleep 1/1000
+        sleep 1/1
       end
-      # @semaphore.lock
-      # puts "DRIVER #{@id} STOP."
-      # @semaphore.unlock
+      @semaphore.lock
+      puts "DRIVER #{@id} STOP."
+      @semaphore.unlock
     end
     tr.run
 
@@ -67,9 +71,9 @@ class Cpu
   def executor
     f = true
     tr = Thread.new do
-      @semaphore.lock
-      #puts "EXECUTOR #{@id} START."
-      @semaphore.unlock
+      # @semaphore.lock
+      # puts "EXECUTOR #{@id} START."
+      # @semaphore.unlock
       while(@work) do
         flag = false
         data = nil
@@ -97,7 +101,7 @@ class Cpu
         end
       end
       # @semaphore.lock
-      # #puts "EXECUTOR #{@id} STOP."
+      # puts "EXECUTOR #{@id} STOP."
       # @semaphore.unlock
     end
     tr.run
@@ -106,9 +110,9 @@ class Cpu
   
   def communicator
     tr = Thread.new do
-      @semaphore.lock
-      #puts "COMMUNICATOR #{@id} START."
-      @semaphore.unlock
+      # @semaphore.lock
+      # puts "COMMUNICATOR #{@id} START."
+      # @semaphore.unlock
       a = 0
       while(@work) do
         #puts @id
@@ -118,9 +122,9 @@ class Cpu
         sleep 1/1000
         a += 1
       end
-      @semaphore.lock
-      #puts "COMMUNICATOR #{@id} STOP."
-      @semaphore.unlock
+      # @semaphore.lock
+      # puts "COMMUNICATOR #{@id} STOP."
+      # @semaphore.unlock
     end
     tr.run
     #tr.join
@@ -131,22 +135,22 @@ class Cpu
   end
   
   def feed
-    if(@buff_size < 15)
-      @semaphore.lock
+    @semaphore.lock
+    while(@buff_size < 15) do
       a = $Feed.get_ready_task
-      @semaphore.unlock
       #puts a.class
       unless(a.nil?) 
-        @semaphore.lock
         @buffer.push a 
         @buff_size += 1
         puts "load (feed): #{@buff_size}"
         log("load (feed): #{@buff_size}")
-        @semaphore.unlock
+      else
+        break
       end
       #puts @buffer.size unless @buffer.size == 10
      
     end
+    @semaphore.unlock
   end
   
   def ask_free()

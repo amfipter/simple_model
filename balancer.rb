@@ -21,39 +21,46 @@ class Balancer
     nil 
   end
 
-  def self.simple_ai_balancer(left_load_1, left_load, current_load, right_load, right_load_1)
-    puts "LOL"
+  def self.simple_ai_balancer(left_load_1, left_load, current_load, right_load, right_load_1, free_l, free_r)
+    #puts "LOL"
     if($net.nil?)
       puts "INIT AI"
       $net = Ai.create()
       Ai.train($net)
     end
-
-    main_res = $net.eval([left_load, current_load, right_load])
-    main = Balancer_tools.vector_extract(res)
-    left_res = $net.eval([left_load_1, left_load, current_load])
+    #puts __LINE__
+    # main_res = $net.eval([left_load, current_load, right_load])
+    # main = Balancer_tools.vector_extract(res)
+    # left_res = $net.eval([left_load_1, left_load, current_load])
+    # left = Balancer_tools.vector_extract(left_res)
+    # right_res = $net.eval([current_load, right_load, right_load_1])
+    # right = Balancer_tools.vector_extract(right_res)
+    main_res = [rand, rand, rand]
+    main = Balancer_tools.vector_extract(main_res)
+    left_res = [rand, rand, rand]
     left = Balancer_tools.vector_extract(left_res)
-    right_res = $net.eval([current_load, right_load, right_load_1])
+    right_res = [rand, rand, rand]
     right = Balancer_tools.vector_extract(right_res)
-
+   # puts __LINE__
     if(main[2] == 1) 
-      if(left[0] == 1)
+      if(left[0] == 1 and free_l)
         return 'left'
-      elsif (right[0] == 1)
+      elsif (right[0] == 1 and free_r)
         return 'right'
       end
       if(left[1] == 1 and right[1] == 1)
-        if (left_res[1] < right_res[1])
+        if (left_res[1] < right_res[1] and free_l)
           return 'left'
-        else
+        elsif (free_r)
           return 'right'
         end
       end
-      if(left[1] == 1 and right[2] == 1)
+      if(left[1] == 1 and right[2] == 1 and free_l)
         return 'left'
-      elsif (right[1] == 1 and left[2] == 1)
+      elsif (right[1] == 1 and left[2] == 1 and free_r)
         return 'right'
       end
+
     end
     nil
   end

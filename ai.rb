@@ -2,7 +2,7 @@ require "ai4r"
 
 module Ai
   def self.create()
-    net = Ai4r::NeuralNetwork::Backpropagation.new(3, 25, 25, 7, 3) #parameters chosen without any reason
+    net = Ai4r::NeuralNetwork::Backpropagation.new([3, 25, 25, 7, 3]) #parameters chosen without any reason
     net
   end
 
@@ -21,7 +21,7 @@ module Simple_ai_tool
     output_data = Array.new(3)
     output_data.map! {|i| i = 0}
 
-    $net_input.times do |i|
+    3.times do |i|
       input_data.push Random.rand($max_tasks)
     end
 

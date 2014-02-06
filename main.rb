@@ -32,13 +32,17 @@ def comm_test()
   exit
 end
 
+#neural network settings
+$disbalance_threshold = 10
+$max_tasks = 25
 
 $count = ARGV[0].to_i
 $seed = 100500
 $task_size = ARGV[1].to_i
 $max_diff = 1000
 $die = false
-$net = nil
+$net = Ai.create()
+#Ai.train($net)
 
 self_test = Self_test.new
 self_test.common_test(5)
@@ -48,7 +52,7 @@ $Log = Log.new
 $Comm = Comm.new($count)
 
 $Feed = Feed.new($seed, 1, $task_size, $max_diff)
-$Feed.debug_print
+# $Feed.debug_print
 sleep 0.5
 #comm_test()
 cpu = Array.new
@@ -64,6 +68,7 @@ t = Thread.new do
   t_max = 0
   while(a) do
     x = 0
+    t_all = 0
     cpu.each {|c| x += c.buff_size}
     if (x == 0)
       cpu.each do |i|
