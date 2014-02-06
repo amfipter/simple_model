@@ -5,7 +5,7 @@ class Self_test
     @Log = Log.new
     @Comm = Comm.new(@size, Log.new)
     @Feed = Feed.new(100500, 1, @task_size, 1000, Log.new)
-    @test_count = 15
+    @test_count = 14
     @l = 0
     @c = 0
     @f = 0

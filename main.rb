@@ -40,9 +40,9 @@ $max_diff = 1000
 $die = false
 $net = nil
 
-self_test = Self_test.new
-self_test.common_test
-exit
+# self_test = Self_test.new
+# self_test.common_test
+# exit
 
 $Log = Log.new
 $Comm = Comm.new($count)

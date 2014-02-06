@@ -28,7 +28,7 @@ class Cpu
   def driver
     tr = Thread.new do
       @semaphore.lock
-      puts "DRIVER #{@id} START."
+      #puts "DRIVER #{@id} START."
       @semaphore.unlock
       while(@work) do
         @@semaphore_.lock
@@ -59,7 +59,7 @@ class Cpu
         sleep 1/1000
       end
       @semaphore.lock
-      puts "DRIVER #{@id} STOP."
+      #puts "DRIVER #{@id} STOP."
       @semaphore.unlock
     end
     tr.run
@@ -71,7 +71,7 @@ class Cpu
     f = true
     tr = Thread.new do
       @semaphore.lock
-      puts "EXECUTOR #{@id} START."
+      #puts "EXECUTOR #{@id} START."
       @semaphore.unlock
       while(@work) do
         flag = false
@@ -84,7 +84,7 @@ class Cpu
         end
         @buff_size = @buffer.size
         @semaphore.unlock
-        puts '=====> ' + @id.to_s + ' ' + @buff_size.to_s if f
+        #puts '=====> ' + @id.to_s + ' ' + @buff_size.to_s if f
         f = false if @buff_size == 0
         f = true if @buff_size > 0
         unless(flag)
@@ -100,7 +100,7 @@ class Cpu
         end
       end
       @semaphore.lock
-      puts "EXECUTOR #{@id} STOP."
+      #puts "EXECUTOR #{@id} STOP."
       @semaphore.unlock
     end
     tr.run
@@ -110,26 +110,17 @@ class Cpu
   def communicator
     tr = Thread.new do
       @semaphore.lock
-      puts "COMMUNICATOR #{@id} START."
+      #puts "COMMUNICATOR #{@id} START."
       @semaphore.unlock
       a = 0
       while(@work) do
-
-        # unless (@free_r or @asked_r)
-        #   ask_free("right") 
-        #   @asked_r = true
-        # end
-        # unless (@free_l or @asked_l)
-        #   ask_free("left") 
-        #   @asked_l = true
-        # end
         sync_status() if a % 10 == 0
         get_msg
         sleep 1/1000
         a += 1
       end
       @semaphore.lock
-      puts "COMMUNICATOR #{@id} STOP."
+      #puts "COMMUNICATOR #{@id} STOP."
       @semaphore.unlock
     end
     tr.run
@@ -145,7 +136,7 @@ class Cpu
       @semaphore.lock
       a = $Feed.get_ready_task
       @semaphore.unlock
-      puts a.class
+      #puts a.class
       unless(a.nil?) 
         @semaphore.lock
         @buffer.push a 
@@ -153,7 +144,7 @@ class Cpu
         log("load (feed): #{@buff_size}")
         @semaphore.unlock
       end
-      puts @buffer.size unless @buffer.size == 10
+      #puts @buffer.size unless @buffer.size == 10
      
     end
   end
@@ -180,7 +171,7 @@ class Cpu
 
     return nil if from.nil?
     if(msg.class.eql? Task)
-      puts "#{@id} msg get"
+      #puts "#{@id} msg get"
       @semaphore.lock
       @buffer.push msg
       @buff_size += 1
@@ -216,7 +207,7 @@ class Cpu
       elsif (from.eql? 'right_1')
         right_status_1 = msg.to_i
       end
-      puts "id: #{@id}; state from #{from}; data: #{msg.to_i}"
+      #puts "id: #{@id}; state from #{from}; data: #{msg.to_i}"
     end
     @semaphore.unlock
     
