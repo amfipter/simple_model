@@ -7,7 +7,8 @@ class Cpu
   def initialize(id, actual_buff_size = 10, debug_mode = nil)
     @buffer = Array.new
     @id = id
-    @buff_size = actual_buff_size
+    @buff_size = 0
+    @debug_mode = debug_mode
     @free_r = false
     @free_l = false
     @asked_r = false
@@ -40,14 +41,20 @@ class Cpu
         #@semaphore.unlock
 
         
-        #send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
+        send_to = Balancer.balance(@buff_size, nil, [@free_l, @free_r])
         #puts send_to.to_s + ">>>>>>>>>>>>>>" + @id.to_s
-        send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1, @free_l, @free_r)
+        #send_to = Balancer.simple_ai_balancer(@left_status_1, @left_status, @buff_size, @right_status, @right_status_1)#, @free_l, @free_r)
         #puts ">>>>>" + send_to.to_s
         @semaphore.lock
         unless (send_to.nil?)
-          data = @buffer.pop
-          $Comm.send(@id, send_to, data)
+          #puts "id #{@id}; send to #{send_to}"
+          part = 3
+          if(@buffer.size > part)
+            part.times do 
+              data = @buffer.pop
+              $Comm.send(@id, send_to, data)
+            end
+          end
           @buff_size = @buffer.size
           set_busy(send_to)
         end
@@ -83,18 +90,19 @@ class Cpu
           flag = true
           data = @buffer.pop
         end
-        @buff_size = @buffer.size
+        #@buff_size = @buffer.size
         @semaphore.unlock
         #puts '=====> ' + @id.to_s + ' ' + @buff_size.to_s if f
-        f = false if @buff_size == 0
-        f = true if @buff_size > 0
+        # f = false if @buff_size == 0
+        # f = true if @buff_size > 0
         unless(flag)
           sleep 1/500
         else
           data.start
           @@semaphore_.lock
-          $Feed.done_task.push data
-          @buff_size -=1
+          $Feed.done_task.push data unless @debug_mode
+          #@buff_size -=1
+          @buff_size = @buffer.size
           log("load (executor): #{@buff_size}")
           @@semaphore_.unlock
           @done += 1
@@ -133,6 +141,14 @@ class Cpu
 
   def buff_size
     @buff_size
+  end
+
+  def add_task_safe(task)
+    @semaphore.lock
+    @buffer.push task
+    @buff_size += 1
+    @semaphore.unlock
+    nil
   end
   
   def feed

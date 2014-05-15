@@ -50,7 +50,7 @@ class Feed
   # end 
   
   def monitor
-    Thread.new do
+    t = Thread.new do
       while(@work) do
         t = Array.new
         #puts @tasks.to_s
@@ -66,6 +66,8 @@ class Feed
         sleep 1/1000
       end 
     end
+    #WARNING!!
+    t.join
   end
   
   def debug_print

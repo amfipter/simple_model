@@ -41,13 +41,17 @@ $max_tasks = 25
 $count = ARGV[0].to_i
 $seed = 100500
 $task_size = ARGV[1].to_i
-$max_diff = 1000
+$max_diff = 3000
 $die = false
-$net = Ai.create()
-Ai.train($net)
 
 self_test = Self_test.new
-self_test.common_test(5)
+#self_test.common_test(5)
+
+# self_test.proof_test(10, 1000)
+# exit
+
+$net = Ai.create()
+Ai.train($net)
 #exit
 
 $Log = Log.new
@@ -81,6 +85,7 @@ t = Thread.new do
     t_all = 0
     cpu.each {|c| x += c.buff_size}
     if (x == 0)
+      sleep 3
       cpu.each do |i|
         puts "ID: " + i.id.to_s + " DONE: " + i.done.to_s
         t_all += i.done

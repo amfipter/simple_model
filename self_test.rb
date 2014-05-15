@@ -11,6 +11,62 @@ class Self_test
     @f = 0
   end
 
+  def proof_test(cpu_count, task_count)
+    cpu = Array.new
+    t1 = Time.new.to_f
+    cpu_count.times {|i| cpu.push Cpu.new(i, 10, true)}
+    feed = Feed.new($seed, 1, task_count, $max_diff)
+    #sleep 1/10
+    task = feed.get_ready_task()
+    cpu.each {|i| i.executor()}
+    i = 1
+    until (task.nil?) do
+      #puts "lol"
+      c = nil
+      print "\r#{i}/#{task_count}"
+      while (c.nil?) do
+        cpu.each do |el|
+          #puts el.buff_size
+          if(el.buff_size == 0)
+            c = el
+            break
+          end
+        end
+        #puts ''
+        #sleep 1/1000000
+      end
+      c.add_task_safe(task)
+      task = feed.get_ready_task()
+      i += 1
+    end
+    puts ''
+
+    #sleep 3
+
+    c = true
+    while(c) do
+      c = false
+      cpu.each do |el|
+        c = true if el.buff_size > 0
+        #puts el.buff_size
+      end
+      sleep 1/300
+      #puts ''
+    end
+
+    t_all = 0
+    cpu.each do |i|
+      puts "ID: " + i.id.to_s + " DONE: " + i.done.to_s
+      t_all += i.done
+      #t_max = i.done if i.done > t_max
+      #t_arr.push i.done
+    end
+    puts "ALL TASKS: " + t_all.to_s
+    puts task_count
+    cpu.each {|c| c.work = false}
+    nil
+  end
+
   def reinit()
     @size *= 2
     @task_size *= 2

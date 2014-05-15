@@ -21,7 +21,7 @@ class Balancer
     nil 
   end
 
-  def self.simple_ai_balancer(left_load_1, left_load, current_load, right_load, right_load_1, free_l, free_r)
+  def self.simple_ai_balancer(left_load_1, left_load, current_load, right_load, right_load_1, free_l = true, free_r = true)
     if (left_load_1.nil? or left_load.nil? or current_load.nil? or right_load.nil? or right_load_1.nil?)
       return nil
     end
