@@ -25,7 +25,6 @@ class Balancer
     if (left_load_1.nil? or left_load.nil? or current_load.nil? or right_load.nil? or right_load_1.nil?)
       return nil
     end
-    #puts "DUCK SUCK!!"
     if($net.nil?)
       puts "INIT AI"
       $net = Ai.create()
